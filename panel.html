@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--bd:#30363d;--fg:#e6edf3;--mut:#8b949e;--acc:#2f81f7;--ok:#3fb950;--warn:#d29922}
+*{box-sizing:border-box;margin:0}
+body{background:var(--bg);color:var(--fg);font:14px/1.6 -apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;padding:16px;max-width:860px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px;margin-bottom:14px}
+h1{font-size:17px;margin-bottom:14px}
+h2{font-size:14px;color:var(--mut);margin-bottom:10px;font-weight:600}
+label{display:block;color:var(--mut);font-size:12px;margin:8px 0 3px}
+input,select,textarea{width:100%;background:#0d1117;border:1px solid var(--bd);border-radius:6px;color:var(--fg);padding:7px 9px;font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+input:focus,select:focus,textarea:focus{outline:1px solid var(--acc)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>div{flex:1;min-width:140px}
+button{background:var(--acc);border:0;color:#fff;border-radius:6px;padding:7px 14px;cursor:pointer;font-size:13px}
+button.ghost{background:#21262d;border:1px solid var(--bd)}
+button:hover{filter:brightness(1.15)}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.chips button{padding:3px 9px;font-size:12px}
+.link{word-break:break-all;background:#0d1117;border:1px solid var(--bd);border-radius:6px;padding:8px;font:11px/1.5 ui-monospace,Menlo,Consolas,monospace;color:#79c0ff;margin:6px 0}
+.node{border-top:1px solid var(--bd);padding:10px 0}
+.node:first-of-type{border-top:0}
+.node .nm{color:var(--ok);font-weight:600}
+.mut{color:var(--mut);font-size:12px}
+.hide{display:none}
+#qr{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:9}
+#qr .box{background:#fff;padding:18px;border-radius:10px;text-align:center;max-width:92vw}
+#qr .box p{color:#333;margin:8px 0;max-width:300px;word-break:break-all;font-size:12px}
+#qrCv svg{width:260px;height:260px}
+.tag{display:inline-block;background:#21262d;border:1px solid var(--bd);border-radius:4px;padding:1px 7px;font-size:11px;color:var(--mut);margin-left:6px}
+</style>
+</head>
+<body>
+<h1>🛰 节点面板<span id="modeTag" class="tag"></span></h1>
+
+<div class="card hide" id="manualCard">
+  <h2>接入配置（未检测到注入配置，手动模式 — 仅保存在本浏览器）</h2>
+  <div class="row">
+    <div><label>节点域名 host（部署片段的域名）</label><input id="mHost" placeholder="snippet.example.com"></div>
+    <div><label>UUID / 密码</label><input id="mUuid" placeholder="495c7195-..."></div>
+  </div>
+  <div class="row">
+    <div><label>默认落地 fdip</label><input id="mFdip" placeholder="proxyip.example.com!txt"></div>
+    <div><label>面板路径（生成订阅链接用）</label><input id="mPath" placeholder="/pa-x7k9"></div>
+  </div>
+  <div style="margin-top:10px"><button id="saveManual">保存</button></div>
+</div>
+
+<div class="card">
+  <h2>生成节点</h2>
+  <div class="row">
+    <div style="max-width:130px"><label>协议</label><select id="proto"><option value="vless">vless</option><option value="trojan">trojan</option><option value="ss">shadowsocks</option></select></div>
+    <div><label>备注名</label><input id="name" placeholder="我的节点"></div>
+  </div>
+  <div class="row">
+    <div><label>优选地址（IP / 域名）</label><input id="addr" placeholder="www.shopify.com"></div>
+    <div style="max-width:90px"><label>端口</label><input id="port" type="number" value="443"></div>
+    <div style="max-width:80px"><label>TLS</label><select id="tls"><option value="1">开</option><option value="0">关</option></select></div>
+  </div>
+  <div class="row">
+    <div><label>SNI</label><input id="sni"></div>
+    <div><label>WS Host</label><input id="host"></div>
+    <div style="max-width:110px"><label>指纹 fp</label><select id="fp"><option>random</option><option>chrome</option><option>firefox</option><option>safari</option><option>ios</option><option>android</option><option>edge</option></select></div>
+  </div>
+  <label>落地 fdip（留空用默认：<span class="mut" id="defFdip"></span>）</label>
+  <input id="fdip" placeholder="proxyip.example.com!txt">
+  <div class="chips" id="fdipChips"></div>
+  <div class="row">
+    <div style="max-width:120px"><label>ed=2560</label><select id="ed"><option value="1">启用</option><option value="0">关闭</option></select></div>
+    <div style="max-width:150px"><label>协议代理模式</label><select id="gb"><option value="0">全局（默认）</option><option value="1">回落 ?global=0</option></select></div>
+  </div>
+  <div class="mut" id="pathPreview" style="margin-top:8px"></div>
+  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button id="gen">生成链接</button><button id="genAdd" class="ghost">生成并加入列表</button></div>
+  <div class="link hide" id="outLink"></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap" id="outBtns"></div>
+</div>
+
+<div class="card">
+  <h2>节点列表（存于本浏览器 localStorage）</h2>
+  <div id="list"><p class="mut">暂无节点</p></div>
+  <div style="margin-top:8px;display:flex;gap:8px"><button id="mkSub">生成订阅</button><button id="clearList" class="ghost">清空</button></div>
+  <div id="subOut" class="hide">
+    <label>订阅内容（base64，可手动导入订阅器）</label>
+    <textarea id="subTxt" rows="4" readonly></textarea>
+    <label>订阅链接（经面板片段解码返回；URL 建议 &lt; 1800 字符，约 2~3 个节点）</label>
+    <div class="link" id="subUrl"></div>
+    <div style="display:flex;gap:8px"><button id="cpSubUrl">复制订阅链接</button><button class="ghost" id="cpSubTxt">复制订阅内容</button></div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>落地自检</h2>
+  <label>fdip 值</label>
+  <input id="ckFdip" placeholder="https://1.2.3.4:443!ip">
+  <div style="margin-top:8px"><button id="ckGo">新标签打开自检</button></div>
+  <p class="mut">利用代理片段自带的非 WS 回显（fdip checked），仅验证参数解析，不代表落地连通性。</p>
+</div>
+
+<div id="qr" class="hide"><div class="box"><div id="qrCv"></div><p id="qrTxt"></p><button id="qrClose">关闭</button></div></div>
+
+<script>window.__CFG__=/*__CFG__*/{};</script>
+<script>
+const $=id=>document.getElementById(id);
+const enc=encodeURIComponent;
+const b64u=s=>btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const LS='bs_panel';
+let store={};
+try{store=JSON.parse(localStorage.getItem(LS)||'{}')}catch(e){store={}}
+store.nodes=store.nodes||[];
+const injected=(window.__CFG__&&window.__CFG__.host)?window.__CFG__:null;
+const cfg=()=>injected||{host:store.host||'',uuid:store.uuid||'',fdip:store.fdip||'',path:store.path||'',ssMethod:'aes-128-gcm'};
+function save(){localStorage.setItem(LS,JSON.stringify(store))}
+function cpTxt(t,btn){
+  const done=()=>{if(btn){const o=btn.textContent;btn.textContent='已复制';setTimeout(()=>btn.textContent=o,1200)}};
+  if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(t).then(done,()=>cpOld(t,done))}else cpOld(t,done);
+}
+function cpOld(t,cb){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}document.body.removeChild(ta);cb()}
+// 手动模式
+if(!injected){
+  $('manualCard').classList.remove('hide');$('modeTag').textContent='手动模式';
+  $('mHost').value=store.host||'';$('mUuid').value=store.uuid||'';$('mFdip').value=store.fdip||'';$('mPath').value=store.path||'';
+  $('saveManual').onclick=()=>{store.host=$('mHost').value.trim();store.uuid=$('mUuid').value.trim();store.fdip=$('mFdip').value.trim();store.path=$('mPath').value.trim()||'/pa-x7k9';save();init();$('saveManual').textContent='已保存';setTimeout(()=>$('saveManual').textContent='保存',1200)};
+}else{$('modeTag').textContent='注入配置 · '+injected.host}
+// fdip 快捷模板
+const chips=[['!txt 反代','*.william.us.ci!txt'],['https+TXT','https://https.example.com!txt'],['socks5','socks5://host:1080'],['http','http://host:8080'],['https 域名','https://domain:443'],['https IP 跳过证书','https://1.2.3.4:443!ip'],['sstp','sstp://host:443'],['turn','turn://host:3478']];
+chips.forEach(c=>{const b=document.createElement('button');b.className='ghost';b.textContent=c[0];b.onclick=()=>{$('fdip').value=c[1];preview()};$('fdipChips').appendChild(b)});
+function buildPath(){
+  const f=$('fdip').value.trim()||cfg().fdip||'';
+  const qs=[];
+  if($('gb').value==='1')qs.push('global=0');
+  if($('ed').value==='1')qs.push('ed=2560');
+  return '/fdip='+f+(qs.length?'?'+qs.join('&'):'');
+}
+function preview(){$('pathPreview').textContent='path 原文：'+buildPath()}
+function buildLink(){
+  const c=cfg();
+  if(!c.host){alert('缺少接入配置（host）');return null}
+  const proto=$('proto').value,addr=$('addr').value.trim(),tls=$('tls').value==='1';
+  if(!addr){alert('请填写优选地址');return null}
+  const port=$('port').value||(tls?443:80);
+  const sni=$('sni').value.trim()||c.host,host=$('host').value.trim()||c.host,fp=$('fp').value;
+  const name=$('name').value.trim()||(proto+'-'+addr);
+  const path=buildPath();
+  if(proto==='vless'||proto==='trojan'){
+    const q=[];
+    if(proto==='vless')q.push('encryption=none');
+    q.push('security='+(tls?'tls':'none'));
+    if(tls)q.push('sni='+enc(sni),'fp='+enc(fp));
+    q.push('host='+enc(host),'type=ws','path='+enc(path),'allowInsecure=0');
+    return proto+'://'+c.uuid+'@'+addr+':'+port+'?'+q.join('&')+'#'+enc(name);
+  }
+  const plugin='v2ray-plugin;mode=websocket'+(tls?';tls':'')+';host='+host+';path='+path;
+  return 'ss://'+b64u((c.ssMethod||'aes-128-gcm')+':'+c.uuid)+'@'+addr+':'+port+'/?plugin='+enc(plugin)+'#'+enc(name);
+}
+function showOut(link){
+  $('outLink').textContent=link;$('outLink').classList.remove('hide');
+  $('outBtns').innerHTML='';
+  const b1=document.createElement('button');b1.textContent='复制链接';b1.onclick=()=>cpTxt(link,b1);
+  const b2=document.createElement('button');b2.textContent='二维码';b2.className='ghost';b2.onclick=()=>showQr(link);
+  $('outBtns').appendChild(b1);$('outBtns').appendChild(b2);
+}
+$('gen').onclick=()=>{const l=buildLink();if(l)showOut(l)};
+$('genAdd').onclick=()=>{const l=buildLink();if(!l)return;showOut(l);store.nodes.push({name:$('name').value.trim()||($('proto').value+'-'+$('addr').value.trim()),link:l});save();renderList()};
+['fdip','ed','gb'].forEach(id=>$(id).addEventListener('input',preview));
+$('proto').onchange=()=>{$('fp').value=$('proto').value==='trojan'?'chrome':'random'};
+$('tls').onchange=()=>{$('port').value=$('tls').value==='1'?443:80};
+// 节点列表
+function renderList(){
+  const el=$('list');el.innerHTML='';
+  if(!store.nodes.length){el.innerHTML='<p class="mut">暂无节点</p>';return}
+  store.nodes.forEach((n,i)=>{
+    const d=document.createElement('div');d.className='node';
+    const nm=document.createElement('div');nm.innerHTML='<span class="nm"></span>';nm.querySelector('.nm').textContent=n.name;
+    const lk=document.createElement('div');lk.className='link';lk.textContent=n.link;
+    const bs=document.createElement('div');bs.style.display='flex';bs.style.gap='8px';bs.style.flexWrap='wrap';
+    const b1=document.createElement('button');b1.textContent='复制';b1.onclick=()=>cpTxt(n.link,b1);
+    const b2=document.createElement('button');b2.textContent='二维码';b2.className='ghost';b2.onclick=()=>showQr(n.link);
+    const b3=document.createElement('button');b3.textContent='删除';b3.className='ghost';b3.onclick=()=>{store.nodes.splice(i,1);save();renderList()};
+    bs.appendChild(b1);bs.appendChild(b2);bs.appendChild(b3);
+    d.appendChild(nm);d.appendChild(lk);d.appendChild(bs);el.appendChild(d);
+  });
+}
+$('clearList').onclick=()=>{if(confirm('清空全部节点？')){store.nodes=[];save();renderList();$('subOut').classList.add('hide')}};
+// 订阅
+$('mkSub').onclick=()=>{
+  if(!store.nodes.length){alert('列表为空');return}
+  const body=btoa(unescape(encodeURIComponent(store.nodes.map(n=>n.link).join('\n'))));
+  $('subTxt').value=body;
+  $('subUrl').textContent='https://'+cfg().host+cfg().path+'/s/'+b64u(body);
+  $('subOut').classList.remove('hide');
+};
+$('cpSubUrl').onclick=e=>cpTxt($('subUrl').textContent,e.target);
+$('cpSubTxt').onclick=e=>cpTxt($('subTxt').value,e.target);
+// 自检
+$('ckGo').onclick=()=>{
+  const v=$('ckFdip').value.trim();if(!v)return;
+  window.open('https://'+cfg().host+'/?fdip='+enc(v),'_blank');
+};
+// 二维码（CDN 加载失败时降级提示）
+let qrLib=null;
+function qrReady(){qrLib=window.qrcode||null}
+function showQr(text){
+  if(!qrLib){alert('二维码库未加载（CDN 不可达），请直接复制链接');return}
+  try{
+    const q=qrLib(0,'M');q.addData(text);q.make();
+    let svg;try{svg=q.createSvgTag({cellSize:4,margin:2,scalable:true})}catch(e){svg=q.createSvgTag(4,2)}
+    $('qrCv').innerHTML=svg;$('qrTxt').textContent=text.slice(0,80)+'…';
+    $('qr').classList.remove('hide');
+  }catch(e){alert('二维码生成失败：'+e.message)}
+}
+$('qrClose').onclick=()=>$('qr').classList.add('hide');
+$('qr').onclick=e=>{if(e.target===$('qr'))$('qr').classList.add('hide')};
+function init(){
+  const c=cfg();
+  $('sni').placeholder=c.host||'默认同节点域名';$('host').placeholder=c.host||'默认同节点域名';
+  $('defFdip').textContent=c.fdip||'（未配置）';
+  preview();
+}
+init();renderList();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js" onload="qrReady()" onerror="qrReady()"></script>
+</body>
+</html>
