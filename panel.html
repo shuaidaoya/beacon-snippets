@@ -63,6 +63,7 @@ button:hover{filter:brightness(1.15)}
     <div style="max-width:90px"><label>端口</label><input id="port" type="number" value="443"></div>
     <div style="max-width:80px"><label>TLS</label><select id="tls"><option value="1">开</option><option value="0">关</option></select></div>
   </div>
+  <div class="chips" id="addrChips"></div>
   <div class="row">
     <div><label>SNI</label><input id="sni"></div>
     <div><label>WS Host</label><input id="host"></div>
@@ -71,12 +72,14 @@ button:hover{filter:brightness(1.15)}
   <label>落地 fdip（留空用默认：<span class="mut" id="defFdip"></span>）</label>
   <input id="fdip" placeholder="proxyip.example.com!txt">
   <div class="chips" id="fdipChips"></div>
+  <div class="mut" style="margin:2px 0">🌏 ProxyIP 国家/地区：</div>
+  <div class="chips" id="proxyipChips"></div>
   <div class="row">
     <div style="max-width:120px"><label>ed=2560</label><select id="ed"><option value="1">启用</option><option value="0">关闭</option></select></div>
     <div style="max-width:150px"><label>协议代理模式</label><select id="gb"><option value="0">全局（默认）</option><option value="1">回落 ?global=0</option></select></div>
   </div>
   <div class="mut" id="pathPreview" style="margin-top:8px"></div>
-  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button id="gen">生成链接</button><button id="genAdd" class="ghost">生成并加入列表</button></div>
+  <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap"><button id="gen">生成链接</button><button id="genAdd" class="ghost">生成并加入列表</button><button id="genAll" class="ghost">🌏 每个国家一个</button></div>
   <div class="link hide" id="outLink"></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap" id="outBtns"></div>
 </div>
@@ -127,9 +130,15 @@ if(!injected){
   $('mHost').value=store.host||'';$('mUuid').value=store.uuid||'';$('mFdip').value=store.fdip||'';$('mPath').value=store.path||'';
   $('saveManual').onclick=()=>{store.host=$('mHost').value.trim();store.uuid=$('mUuid').value.trim();store.fdip=$('mFdip').value.trim();store.path=$('mPath').value.trim()||'/pa-x7k9';save();init();$('saveManual').textContent='已保存';setTimeout(()=>$('saveManual').textContent='保存',1200)};
 }else{$('modeTag').textContent='注入配置 · '+injected.host}
-// fdip 快捷模板
-const chips=[['!txt 反代','*.william.us.ci!txt'],['https+TXT','https://https.example.com!txt'],['socks5','socks5://host:1080'],['http','http://host:8080'],['https 域名','https://domain:443'],['https IP 跳过证书','https://1.2.3.4:443!ip'],['sstp','sstp://host:443'],['turn','turn://host:3478']];
-chips.forEach(c=>{const b=document.createElement('button');b.className='ghost';b.textContent=c[0];b.onclick=()=>{$('fdip').value=c[1];preview()};$('fdipChips').appendChild(b)});
+// fdip 快捷模板（协议 + ProxyIP 地区）
+const fdipChips=[['!txt 反代','*.william.us.ci!txt'],['socks5','socks5://host:1080'],['https 域名','https://domain:443'],['https IP 跳过证书','https://1.2.3.4:443!ip'],['sstp','sstp://host:443'],['turn','turn://host:3478']];
+const proxyipRegions=[['🇸🇬 SG','ProxyIP.SG.CMLiussss.net'],['🇭🇰 HK','ProxyIP.HK.CMLiussss.net'],['🇯🇵 JP','ProxyIP.JP.CMLiussss.net'],['🇰🇷 KR','ProxyIP.KR.CMLiussss.net'],['🇮🇳 IN','ProxyIP.IN.CMLiussss.net'],['🇹🇼 TW','tw.william.us.ci'],['🇺🇸 US','ProxyIP.US.CMLiussss.net'],['🇨🇦 CA','ProxyIP.CA.CMLiussss.net'],['🇬🇧 GB','ProxyIP.GB.CMLiussss.net'],['🇫🇷 FR','ProxyIP.FR.CMLiussss.net'],['🇩🇪 DE','ProxyIP.DE.CMLiussss.net'],['🇳🇱 NL','ProxyIP.NL.CMLiussss.net'],['🇸🇪 SE','ProxyIP.SE.CMLiussss.net'],['🇫🇮 FI','ProxyIP.FI.CMLiussss.net'],['🇵🇱 PL','ProxyIP.PL.CMLiussss.net'],['🇷🇺 RU','ProxyIP.RU.CMLiussss.net'],['🇨🇭 CH','ProxyIP.CH.CMLiussss.net'],['🇱🇻 LV','ProxyIP.LV.CMLiussss.net']];
+function addChips(arr,parent){arr.forEach(c=>{const b=document.createElement('button');b.className='ghost';b.textContent=c[0];b.title=c[1];b.onclick=()=>{$('fdip').value=c[1];preview()};parent.appendChild(b)})}
+addChips(fdipChips,$('fdipChips'));
+addChips(proxyipRegions,document.getElementById('proxyipChips'));
+// 优选地址（前端）快捷模板
+const addrChips=[['shopify.com','www.shopify.com'],['cf.090227.xyz','cf.090227.xyz'],['time.is','time.is'],['icook.hk','icook.hk'],['icook.tw','icook.tw'],['visa.cn','www.visa.cn'],['mfa.gov.ua','mfa.gov.ua'],['tencentapp.cn','tencentapp.cn'],['saas.sin.fan','saas.sin.fan']];
+addChips(addrChips,document.getElementById('addrChips'));
 function buildPath(){
   const f=$('fdip').value.trim()||cfg().fdip||'';
   const qs=[];
@@ -167,6 +176,15 @@ function showOut(link){
 }
 $('gen').onclick=()=>{const l=buildLink();if(l)showOut(l)};
 $('genAdd').onclick=()=>{const l=buildLink();if(!l)return;showOut(l);store.nodes.push({name:$('name').value.trim()||($('proto').value+'-'+$('addr').value.trim()),link:l});save();renderList()};
+$('genAll').onclick=()=>{
+  if(!$('addr').value.trim()){alert('请填写优选地址');return}
+  const saved=$('fdip').value,c=cfg(),name=$('name').value.trim()||($('proto').value+'-'+$('addr').value.trim());
+  proxyipRegions.forEach(r=>{
+    $('fdip').value=r[1];const l=buildLink();if(l)store.nodes.push({name:r[0].slice(0,2)+' '+name,link:l});
+  });
+  $('fdip').value=saved;preview();save();renderList();
+  alert('已生成 '+proxyipRegions.length+' 个节点');
+};
 ['fdip','ed','gb'].forEach(id=>$(id).addEventListener('input',preview));
 $('proto').onchange=()=>{$('fp').value=$('proto').value==='trojan'?'chrome':'random'};
 $('tls').onchange=()=>{$('port').value=$('tls').value==='1'?443:80;saveFormState()};
