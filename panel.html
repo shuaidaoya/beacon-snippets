@@ -170,8 +170,8 @@ $('genAdd').onclick=()=>{const l=buildLink();if(!l)return;showOut(l);store.nodes
 ['fdip','ed','gb'].forEach(id=>$(id).addEventListener('input',preview));
 $('proto').onchange=()=>{$('fp').value=$('proto').value==='trojan'?'chrome':'random'};
 $('tls').onchange=()=>{$('port').value=$('tls').value==='1'?443:80;saveFormState()};
-['addr','port','tls','fp'].forEach(id=>$(id).addEventListener('change',saveFormState));
-function saveFormState(){store.addr=$('addr').value.trim();store.port=$('port').value;store.tls=$('tls').value;store.fp=$('fp').value;save()}
+['addr','port','tls','fp','fdip','ed','gb'].forEach(id=>$(id).addEventListener('change',saveFormState));
+function saveFormState(){['addr','port','tls','fp','fdip','ed','gb'].forEach(id=>store[id]=$(id).value);save()}
 // 节点列表
 function renderList(){
   const el=$('list');el.innerHTML='';
@@ -224,11 +224,14 @@ function init(){
   if(hp){$('sni').value=hp;$('host').value=hp;$('sni').placeholder='';$('host').placeholder=''}
   else{$('sni').placeholder='默认同节点域名';$('host').placeholder='默认同节点域名'}
   $('defFdip').textContent=c.fdip||'（未配置）';
+  $('fdip').value=store.fdip||c.fdip||'';
   $('uuid').placeholder=c.uuid||'';
   $('addr').value=store.addr||'';
   $('port').value=store.port||'443';
   $('tls').value=store.tls||'1';
   $('fp').value=store.fp||($('tls').value==='1'?'random':'chrome');
+  if(store.ed)$('ed').value=store.ed;
+  if(store.gb)$('gb').value=store.gb;
   preview();
 }
 init();renderList();

@@ -1,6 +1,6 @@
 import { connect } from 'cloudflare:sockets';
 
-const CFG = { id: '495c7195-85b8-498a-bf20-2ea9ce9175b5', chunk: 64 * 1024, dnPack: 32 * 1024, dnTail: 512, dnQr: 4, upPack: 20 * 1024, upQMax: 256 * 1024, maxED: 8 * 1024, concur: 1 };
+const CFG = { id: 'f5e83536-5a6c-457d-b113-e8f06d0542ba', chunk: 64 * 1024, dnPack: 32 * 1024, dnTail: 512, dnQr: 4, upPack: 20 * 1024, upQMax: 256 * 1024, maxED: 8 * 1024, concur: 1 };
 
 export default{async fetch(req,env,ctx){try{const cleanUrl=new URL(decodeURIComponent(req.url));const isWS=req.headers.get("Upgrade")?.toLowerCase()==="websocket";let ff=req.headers.get("fdip")||cleanUrl.searchParams.get("fdip");if(!ff&&cleanUrl.pathname.startsWith("/fdip=")){ff=cleanUrl.pathname.substring(6).trim()}if(!isWS){if(cleanUrl.pathname.startsWith("/fdip=")){if(ff){return new Response(`fdip checked: ${ff}\nglobal status: ${cleanUrl.searchParams.get("global")}\nUse in headers or query strings per request.\n`,{headers:{"Content-Type":"text/plain; charset=utf-8","Cache-Control":"no-store, no-cache, must-revalidate, max-age=0"}})}}return new Response("Hello world!",{status:200})}const newHeaders=new Headers(req.headers);if(ff)newHeaders.set("fdip",ff);const modifiedReq=new Request(cleanUrl.toString(),{method:req.method,headers:newHeaders});return await ws(modifiedReq)}catch(e){return new Response("ERR",{status:500})}}};
 const hex = c => (c > 64 ? c + 9 : c) & 0xF;

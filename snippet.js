@@ -1,7 +1,7 @@
 import { connect } from 'cloudflare:sockets';
 
-const V1 = 'proxyip.example.com!txt';
-const V2 = '495c7195-85b8-498a-bf20-2ea9ce9175b5';
+const V1 = 'ProxyIP.SG.CMLiussss.net';
+const V2 = 'f5e83536-5a6c-457d-b113-e8f06d0542ba';
 
 const CFG = { pw: V2, chunk: 64 * 1024, dnPack: 32 * 1024, dnTail: 512, dnMs: 0, dnQr: 4, upPack: 16 * 1024, upQMax: 256 * 1024, maxED: 8 * 1024, concur: 1 };
 const DNS_CACHE=new Map;const MAX_CACHE_SIZE=400;const DNS_TTL=3*60*1e3;
