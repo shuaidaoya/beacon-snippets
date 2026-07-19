@@ -169,7 +169,9 @@ $('gen').onclick=()=>{const l=buildLink();if(l)showOut(l)};
 $('genAdd').onclick=()=>{const l=buildLink();if(!l)return;showOut(l);store.nodes.push({name:$('name').value.trim()||($('proto').value+'-'+$('addr').value.trim()),link:l});save();renderList()};
 ['fdip','ed','gb'].forEach(id=>$(id).addEventListener('input',preview));
 $('proto').onchange=()=>{$('fp').value=$('proto').value==='trojan'?'chrome':'random'};
-$('tls').onchange=()=>{$('port').value=$('tls').value==='1'?443:80};
+$('tls').onchange=()=>{$('port').value=$('tls').value==='1'?443:80;saveFormState()};
+['addr','port','tls','fp'].forEach(id=>$(id).addEventListener('change',saveFormState));
+function saveFormState(){store.addr=$('addr').value.trim();store.port=$('port').value;store.tls=$('tls').value;store.fp=$('fp').value;save()}
 // 节点列表
 function renderList(){
   const el=$('list');el.innerHTML='';
@@ -218,8 +220,15 @@ $('qrClose').onclick=()=>$('qr').classList.remove('show');
 $('qr').onclick=e=>{if(e.target===$('qr'))$('qr').classList.remove('show')};
 function init(){
   const c=cfg();
-  $('sni').placeholder=c.host||'默认同节点域名';$('host').placeholder=c.host||'默认同节点域名';
+  const hp=c.host||'';
+  if(hp){$('sni').value=hp;$('host').value=hp;$('sni').placeholder='';$('host').placeholder=''}
+  else{$('sni').placeholder='默认同节点域名';$('host').placeholder='默认同节点域名'}
   $('defFdip').textContent=c.fdip||'（未配置）';
+  $('uuid').placeholder=c.uuid||'';
+  $('addr').value=store.addr||'';
+  $('port').value=store.port||'443';
+  $('tls').value=store.tls||'1';
+  $('fp').value=store.fp||($('tls').value==='1'?'random':'chrome');
   preview();
 }
 init();renderList();
