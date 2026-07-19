@@ -1,10 +1,10 @@
 // 面板片段：独立部署，与代理片段互斥（靠片段规则表达式分流，见 README）
 // 部署前修改以下常量
 const PANEL_PATH = '/pa-x7k9';                                       // 秘密路径，务必修改并与片段规则表达式一致
-const PANEL_KEY = 'change-me';                                       // 访问口令，务必修改
+const PANEL_KEY = 'beacon';                                          // 访问口令，务必修改
 const PANEL_URL = 'https://shuaidaoya.github.io/beacon-snippets/panel.html'; // 面板页面地址，GitHub Pages 或 Cloudflare Pages 均可
 const UUID = 'f5e83536-5a6c-457d-b113-e8f06d0542ba';                   // 与 snippet.js 的 V2 一致
-const FDIP = 'proxyip.example.com!txt';                              // 与 snippet.js 的 V1 一致
+const FDIP = 'ProxyIP.SG.CMLiussss.net';                             // 与 snippet.js 的 V1 一致
 
 const b64d = s => { s = s.replace(/-/g, '+').replace(/_/g, '/'); s += '===='.slice(0, (4 - s.length % 4) % 4); return Uint8Array.from(atob(s), c => c.charCodeAt(0)); };
 
