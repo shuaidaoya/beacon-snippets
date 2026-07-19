@@ -138,7 +138,7 @@ addChips(fdipChips,$('fdipChips'));
 addChips(proxyipRegions,document.getElementById('proxyipChips'));
 // 优选地址（前端）快捷模板
 const addrChips=[['shopify.com','www.shopify.com'],['cf.090227.xyz','cf.090227.xyz'],['time.is','time.is'],['icook.hk','icook.hk'],['icook.tw','icook.tw'],['visa.cn','www.visa.cn'],['mfa.gov.ua','mfa.gov.ua'],['tencentapp.cn','tencentapp.cn'],['saas.sin.fan','saas.sin.fan']];
-addChips(addrChips,document.getElementById('addrChips'));
+addrChips.forEach(c=>{const b=document.createElement('button');b.className='ghost';b.textContent=c[0];b.title=c[1];b.onclick=()=>{$('addr').value=c[1]};document.getElementById('addrChips').appendChild(b)});
 function buildPath(){
   const f=$('fdip').value.trim()||cfg().fdip||'';
   const qs=[];
